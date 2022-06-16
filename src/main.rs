@@ -109,7 +109,10 @@ impl GameState for State {
 }
 
 fn run() -> BError {
-    let bterm = BTermBuilder::simple80x50().with_title("ninetenths").build()?;
+    let bterm = BTermBuilder::simple80x50()
+        .with_tile_dimensions(16, 16)
+        .with_title("ninetenths")
+        .build()?;
     main_loop(bterm, State::new())
 }
 
