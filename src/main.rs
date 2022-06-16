@@ -11,8 +11,9 @@ impl State {
 }
 
 impl GameState for State {
-    fn tick(&mut self, _: &mut BTerm) {
-
+    fn tick(&mut self, ctx: &mut BTerm) {
+        ctx.cls();
+        ctx.print(1, 1, "possession is nine-tenths of the law");
     }
 
 }
