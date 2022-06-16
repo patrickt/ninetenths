@@ -7,3 +7,10 @@ edition = "2021"
 
 [dependencies]
 bracket-lib = {version = "0.8.1"}
+specs = "0.17.0"
+specs-derive = "0.4.1"
+derive_more = "0.99.17"
+
+# Local Variables:
+# compile-command: "cargo build"
+# End:
