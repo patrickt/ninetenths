@@ -1,56 +1,39 @@
-use bracket_lib::prelude::*;
+use crate::core::*;
 use specs::prelude::*;
-use specs_derive::Component;
-use derive_more::Display;
+use crate::vitals;
+use bracket_lib::prelude::*;
+use crate::act;
 
-struct State {
+pub struct State {
     world: World,
     player: Entity,
 }
 
-#[derive(Component)]
-struct Pos(Point);
-
-#[derive(Component)]
-struct Tile {
-    tile: String,
-}
-
-#[derive(Component)]
-struct Player {}
-
-enum Input {
-    Left, Right, Up, Down,
-}
-
-enum Action {
-    Nil,
-    Move(Entity, Point),
-}
-
-impl Pos {
-    fn new(x: i32, y: i32) -> Pos {
-        Pos(Point{x,y})
-    }
-}
-
 impl State {
-    fn new() -> State {
+    pub fn new() -> State {
         let mut world = World::new();
         world.register::<Pos>();
-        world.register::<Tile>();
+        world.register::<Draw>();
         world.register::<Player>();
-        let player = world.create_entity().with(Player{}).with(Pos::new(0,0)).with(Tile{tile: "@".to_string()}).build();
-        world.create_entity().with(Pos::new(1,1)).with(Tile{tile: "X".to_string()}).build();
-        world.create_entity().with(Pos::new(2,4)).with(Tile{tile: "u".to_string()}).build();
+        vitals::register_vitals(&mut world);
+
+        let player =
+            world.create_entity()
+            .with(Player{})
+            .with(Pos::new(0,0))
+            .with(Draw{tile: "@".to_string()})
+            .with(vitals::SpO2::default())
+            .build();
+        world.create_entity().with(Pos::new(1,1)).with(Draw{tile: "X".to_string()}).build();
+        world.create_entity().with(Pos::new(2,4)).with(Draw{tile: "u".to_string()}).build();
         State {
             world,
             player,
         }
     }
 
-    fn decode_input(&self, ctx: &mut BTerm) -> Option<Input> {
-        use Input::*;
+    fn decode_input(&self, ctx: &mut BTerm) -> Option<act::Input> {
+        use crate::act::Input::*;
 
         match ctx.key {
             None => None,
@@ -64,9 +47,9 @@ impl State {
         }
     }
 
-    fn act_upon(&self, input: &Input) -> Action {
-        use Action::*;
-        use Input::*;
+    fn act_upon(&self, input: &act::Input) -> act::Action {
+        use crate::act::Action::*;
+        use crate::act::Input::*;
         let player = self.player;
         match input {
             Left => Move(player, Point::new(-1, 0)),
@@ -77,8 +60,8 @@ impl State {
         }
     }
 
-    fn perform(&mut self, act: Action) {
-        use Action::*;
+    fn perform(&mut self, act: act::Action) {
+        use act::Action::*;
         let mut positions = self.world.write_storage::<Pos>();
         match act {
             Move(e, p) => {
@@ -100,23 +83,10 @@ impl GameState for State {
         }
 
         let positions = self.world.read_storage::<Pos>();
-        let tiles = self.world.read_storage::<Tile>();
+        let tiles = self.world.read_storage::<Draw>();
         for (p, t) in (&positions, &tiles).join() {
             ctx.print(p.0.x, p.0.y, &t.tile);
         }
     }
 
-}
-
-fn run() -> BError {
-    let bterm = BTermBuilder::simple80x50()
-        .with_tile_dimensions(16, 16)
-        .with_title("ninetenths")
-        .build()?;
-    main_loop(bterm, State::new())
-}
-
-fn main() {
-    println!("Hello, world!");
-    run().unwrap();
 }
